@@ -52,18 +52,21 @@ export default function AdminDashboard() {
   const fetchStats = useCallback(async () => {
     const res = await fetch('/api/admin/stats')
     if (res.status === 401) { router.push('/admin'); return }
+    if (!res.ok) return
     setStats(await res.json())
   }, [router])
 
   const fetchUsers = useCallback(async () => {
     const res = await fetch('/api/admin/users')
     if (res.status === 401) { router.push('/admin'); return }
+    if (!res.ok) return
     setUsers(await res.json())
   }, [router])
 
   const fetchNotifications = useCallback(async () => {
     const res = await fetch('/api/admin/notifications')
     if (res.status === 401) { router.push('/admin'); return }
+    if (!res.ok) return
     setNotifications(await res.json())
   }, [router])
 
