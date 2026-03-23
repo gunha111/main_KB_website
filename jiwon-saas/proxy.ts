@@ -5,11 +5,16 @@ const PROTECTED = ['/dashboard', '/onboarding', '/mypage']
 const AUTH_ONLY = ['/login', '/signup']
 
 export default async function middleware(request: NextRequest) {
+  // 환경변수 미설정 시 통과 (빌드/개발 초기)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
