@@ -47,7 +47,7 @@ export default function LoginPage() {
     const { error: err } = await supabase.auth.signInWithOtp({ email })
     setLoading(false)
     if (err) {
-      setError(err.message)
+      setError('잠시 후 다시 시도해주세요')
       return
     }
     setStep('otp')

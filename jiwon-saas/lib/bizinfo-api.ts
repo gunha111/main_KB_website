@@ -1,5 +1,4 @@
 import { createClient as createServiceClient } from '@supabase/supabase-js'
-import { addDays, format } from 'date-fns'
 import type { SubsidyInsert } from './supabase/types'
 
 const BIZINFO_URL = 'https://www.bizinfo.go.kr/uss/rss/bizinfoApi.do'
@@ -38,13 +37,23 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// reqstBeginEndDe 형식: "YYYYMMDD~YYYYMMDD" 또는 "YYYY-MM-DD ~ YYYY-MM-DD"
+// 날짜를 파싱할 수 없으면 (예: "예산 소진시까지") 먼 미래로 처리
+function parseEndDate(raw: string): string {
+  if (!raw) return '2099-12-31'
+  const parts = raw.split('~')
+  const candidate = normalizeDate((parts[1] ?? parts[0]).trim())
+  // YYYY-MM-DD 형식이 아니면 먼 미래로
+  return /^\d{4}-\d{2}-\d{2}$/.test(candidate) ? candidate : '2099-12-31'
+}
+
 // 단건 페이지 조회 (재시도 포함)
 async function fetchPage(params: URLSearchParams, attempt = 0): Promise<unknown[]> {
   try {
     const res = await fetch(`${BIZINFO_URL}?${params.toString()}`)
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const json = await res.json()
-    const items = json?.items?.item
+    const items = json?.jsonArray
     if (!items) return []
     return Array.isArray(items) ? items : [items]
   } catch (err) {
@@ -54,14 +63,9 @@ async function fetchPage(params: URLSearchParams, attempt = 0): Promise<unknown[
   }
 }
 
-// 오늘 ~ 오늘+daysFromNow 마감 공고 전체 수집
-export async function fetchSubsidies(daysFromNow = 90): Promise<SubsidyFetch[]> {
+// 공고 전체 수집 후 마감일 기준 필터링
+export async function fetchSubsidies(_daysFromNow = 90): Promise<SubsidyFetch[]> {
   const today = new Date()
-  const endDay = addDays(today, daysFromNow)
-
-  const searchBgnDe = format(today, 'yyyyMMdd')
-  const searchEndDe = format(endDay, 'yyyyMMdd')
-
   const results: SubsidyFetch[] = []
   let pageIndex = 1
   const pageUnit = 100
@@ -72,8 +76,6 @@ export async function fetchSubsidies(daysFromNow = 90): Promise<SubsidyFetch[]> 
       dataType: 'json',
       pageUnit: String(pageUnit),
       pageIndex: String(pageIndex),
-      searchBgnDe,
-      searchEndDe,
     })
 
     const items = await fetchPage(params)
@@ -81,16 +83,21 @@ export async function fetchSubsidies(daysFromNow = 90): Promise<SubsidyFetch[]> 
     for (const item of items) {
       try {
         const i = item as Record<string, string>
+        const endDate = parseEndDate(i.reqstBeginEndDe ?? '')
+        // 마감일이 오늘 이후 ~ cutoff 이내인 공고만 (2099-12-31은 항상 포함)
+        // 이미 마감된 공고 제외 (2099-12-31은 통과)
+        if (endDate !== '2099-12-31' && endDate < today.toISOString().slice(0, 10)) continue
+
         const entry: SubsidyFetch = {
           external_id: i.pblancId ?? '',
           title:       i.pblancNm ?? '',
           agency:      i.jrsdInsttNm ?? '',
-          category:    i.bizDivNm ?? '',
-          end_date:    normalizeDate(i.reqstDtSn ?? ''),
+          category:    i.pldirSportRealmLclasCodeNm ?? '',
+          end_date:    endDate,
           detail_url:  i.pblancUrl ?? '',
           raw_content: i.bsnsSumryCn ?? '',
         }
-        if (entry.external_id && entry.title && entry.end_date) {
+        if (entry.external_id && entry.title) {
           results.push(entry)
         }
       } catch (e) {
