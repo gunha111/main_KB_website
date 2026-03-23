@@ -16,7 +16,7 @@ export default function LoginPage() {
 
   const [step, setStep] = useState<'email' | 'otp'>('email')
   const [email, setEmail] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [resendCooldown, setResendCooldown] = useState(0)
@@ -30,10 +30,10 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [resendCooldown])
 
-  // OTP 6자리 완성 시 자동 인증
+  // OTP 8자리 완성 시 자동 인증
   useEffect(() => {
     const code = otp.join('')
-    if (code.length === 6) handleVerifyOtp(code)
+    if (code.length === 8) handleVerifyOtp(code)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp])
 
@@ -66,7 +66,7 @@ export default function LoginPage() {
       setLoading(false)
       if (err) {
         setError('인증번호가 맞지 않습니다')
-        setOtp(['', '', '', '', '', ''])
+        setOtp(['', '', '', '', '', '', '', ''])
         otpRefs.current[0]?.focus()
         return
       }
@@ -87,20 +87,20 @@ export default function LoginPage() {
   function handleOtpChange(index: number, value: string) {
     // 붙여넣기 처리
     if (value.length > 1) {
-      const digits = value.replace(/\D/g, '').slice(0, 6)
+      const digits = value.replace(/\D/g, '').slice(0, 8)
       const newOtp = [...otp]
       digits.split('').forEach((d, i) => {
-        if (index + i < 6) newOtp[index + i] = d
+        if (index + i < 8) newOtp[index + i] = d
       })
       setOtp(newOtp)
-      otpRefs.current[Math.min(index + digits.length, 5)]?.focus()
+      otpRefs.current[Math.min(index + digits.length, 7)]?.focus()
       return
     }
     const digit = value.replace(/\D/g, '')
     const newOtp = [...otp]
     newOtp[index] = digit
     setOtp(newOtp)
-    if (digit && index < 5) otpRefs.current[index + 1]?.focus()
+    if (digit && index < 7) otpRefs.current[index + 1]?.focus()
   }
 
   function handleOtpKeyDown(index: number, e: React.KeyboardEvent) {
@@ -156,18 +156,18 @@ export default function LoginPage() {
               <span className="text-white font-medium">{email}</span>로
               전송된 6자리 인증번호를 입력해주세요
             </p>
-            <div className="flex gap-2 mt-4 justify-center">
+            <div className="flex gap-1.5 mt-4 justify-center">
               {otp.map((digit, i) => (
                 <input
                   key={i}
                   ref={(el) => { otpRefs.current[i] = el }}
                   type="text"
                   inputMode="numeric"
-                  maxLength={6}
+                  maxLength={8}
                   value={digit}
                   onChange={(e) => handleOtpChange(i, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-12 h-14 text-center text-xl font-bold rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#E8A020] transition"
+                  className="w-9 h-12 text-center text-lg font-bold rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-[#E8A020] transition"
                 />
               ))}
             </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
               {resendCooldown > 0 ? `재발송 (${resendCooldown}초 후 가능)` : '인증번호 재발송'}
             </button>
             <button
-              onClick={() => { setStep('email'); setOtp(['','','','','','']); setError('') }}
+              onClick={() => { setStep('email'); setOtp(['','','','','','','','']); setError('') }}
               className="mt-2 w-full py-2 text-sm text-white/40 hover:text-white/60 transition"
             >
               이메일 다시 입력
