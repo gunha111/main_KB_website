@@ -31,6 +31,17 @@ export async function PATCH(req: Request) {
   if (!email || !plan) return NextResponse.json({ error: 'email, plan 필요' }, { status: 400 })
 
   const supabase = adminClient()
+  // 유저 존재 여부 확인
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .single()
+
+  if (!existing) {
+    return NextResponse.json({ error: '해당 이메일로 가입된 유저가 없습니다' }, { status: 404 })
+  }
+
   const { error } = await supabase
     .from('profiles')
     .update({ plan })

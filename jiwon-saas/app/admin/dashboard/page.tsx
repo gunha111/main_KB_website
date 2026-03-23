@@ -86,13 +86,13 @@ export default function AdminDashboard() {
       body: JSON.stringify({ email: grantEmail, plan: grantPlan }),
     })
     setGrantLoading(false)
+    const data = await res.json()
     if (res.ok) {
       setGrantMsg(`✓ ${grantEmail} → ${PLAN_LABELS[grantPlan]} 변경 완료`)
       setGrantEmail('')
       fetchUsers()
     } else {
-      const data = await res.json()
-      setGrantMsg(`오류: ${data.error}`)
+      setGrantMsg(`✗ ${data.error}`)
     }
   }
 
