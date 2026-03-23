@@ -1,5 +1,6 @@
 [build]
 base    = "jiwon-saas"
+publish = ".next"
 command = "npm run build"
 
 [[plugins]]
