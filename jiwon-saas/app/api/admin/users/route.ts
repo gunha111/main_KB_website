@@ -11,7 +11,7 @@ function adminClient() {
 
 // 유저 목록
 export async function GET() {
-  if (!isAdminAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAdminAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = adminClient()
   const { data, error } = await supabase
@@ -25,7 +25,7 @@ export async function GET() {
 
 // 플랜 변경
 export async function PATCH(req: Request) {
-  if (!isAdminAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!(await isAdminAuthed())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { email, plan } = await req.json()
   if (!email || !plan) return NextResponse.json({ error: 'email, plan 필요' }, { status: 400 })
