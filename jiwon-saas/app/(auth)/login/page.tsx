@@ -6,33 +6,16 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-// 010-XXXX-XXXX → +8210XXXXXXXX
-function toE164(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
-  if (digits.startsWith('0')) {
-    return '+82' + digits.slice(1)
-  }
-  return '+82' + digits
-}
-
-// 입력값 자동 포맷: 010-XXXX-XXXX
-function formatPhone(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 11)
-  if (digits.length <= 3) return digits
-  if (digits.length <= 7) return `${digits.slice(0, 3)}-${digits.slice(3)}`
-  return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
-}
-
-function isValidPhone(phone: string): boolean {
-  return /^010-\d{4}-\d{4}$/.test(phone)
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [step, setStep] = useState<'phone' | 'otp'>('phone')
-  const [phone, setPhone] = useState('')
+  const [step, setStep] = useState<'email' | 'otp'>('email')
+  const [email, setEmail] = useState('')
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -50,22 +33,18 @@ export default function LoginPage() {
   // OTP 6자리 완성 시 자동 인증
   useEffect(() => {
     const code = otp.join('')
-    if (code.length === 6) {
-      handleVerifyOtp(code)
-    }
+    if (code.length === 6) handleVerifyOtp(code)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [otp])
 
   async function handleSendOtp() {
     setError('')
-    if (!isValidPhone(phone)) {
-      setError('올바른 전화번호를 입력해주세요')
+    if (!isValidEmail(email)) {
+      setError('올바른 이메일 주소를 입력해주세요')
       return
     }
     setLoading(true)
-    const { error: err } = await supabase.auth.signInWithOtp({
-      phone: toE164(phone),
-    })
+    const { error: err } = await supabase.auth.signInWithOtp({ email })
     setLoading(false)
     if (err) {
       setError('잠시 후 다시 시도해주세요')
@@ -80,9 +59,9 @@ export default function LoginPage() {
       setError('')
       setLoading(true)
       const { data, error: err } = await supabase.auth.verifyOtp({
-        phone: toE164(phone),
+        email,
         token: code,
-        type: 'sms',
+        type: 'email',
       })
       setLoading(false)
       if (err) {
@@ -91,22 +70,18 @@ export default function LoginPage() {
         otpRefs.current[0]?.focus()
         return
       }
-      // 프로필 존재 여부로 온보딩 분기
       const userId = data.user?.id
       if (!userId) return
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
         .single()
 
-      if (profile) {
-        router.push('/dashboard')
-      } else {
-        router.push('/onboarding')
-      }
+      router.push(profile ? '/dashboard' : '/onboarding')
     },
-    [phone, router, supabase]
+    [email, router, supabase]
   )
 
   function handleOtpChange(index: number, value: string) {
@@ -118,19 +93,14 @@ export default function LoginPage() {
         if (index + i < 6) newOtp[index + i] = d
       })
       setOtp(newOtp)
-      const nextIndex = Math.min(index + digits.length, 5)
-      otpRefs.current[nextIndex]?.focus()
+      otpRefs.current[Math.min(index + digits.length, 5)]?.focus()
       return
     }
-
     const digit = value.replace(/\D/g, '')
     const newOtp = [...otp]
     newOtp[index] = digit
     setOtp(newOtp)
-
-    if (digit && index < 5) {
-      otpRefs.current[index + 1]?.focus()
-    }
+    if (digit && index < 5) otpRefs.current[index + 1]?.focus()
   }
 
   function handleOtpKeyDown(index: number, e: React.KeyboardEvent) {
@@ -158,27 +128,24 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {step === 'phone' ? (
+        {step === 'email' ? (
           <>
-            <label className="block text-sm text-white/70 mb-2">
-              전화번호
-            </label>
+            <label className="block text-sm text-white/70 mb-2">이메일</label>
             <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
-              placeholder="010-0000-0000"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="example@email.com"
               className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#E8A020] transition"
               onKeyDown={(e) => e.key === 'Enter' && handleSendOtp()}
+              autoFocus
             />
-            {error && (
-              <p className="mt-2 text-sm text-red-400">{error}</p>
-            )}
+            {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
             <button
               onClick={handleSendOtp}
               disabled={loading}
               className="mt-4 w-full py-3 rounded-lg font-semibold text-white transition disabled:opacity-50"
-              style={{ backgroundColor: '#E8A020' }}
+              style={{ backgroundColor: '#E8A020', color: '#08112A' }}
             >
               {loading ? '발송 중...' : '인증번호 받기'}
             </button>
@@ -186,8 +153,8 @@ export default function LoginPage() {
         ) : (
           <>
             <p className="text-sm text-white/70 mb-1">
-              <span className="text-white font-medium">{phone}</span>으로
-              전송된 인증번호를 입력해주세요
+              <span className="text-white font-medium">{email}</span>로
+              전송된 6자리 인증번호를 입력해주세요
             </p>
             <div className="flex gap-2 mt-4 justify-center">
               {otp.map((digit, i) => (
@@ -204,32 +171,20 @@ export default function LoginPage() {
                 />
               ))}
             </div>
-            {error && (
-              <p className="mt-3 text-sm text-red-400 text-center">{error}</p>
-            )}
-            {loading && (
-              <p className="mt-3 text-sm text-white/50 text-center">
-                인증 중...
-              </p>
-            )}
+            {error && <p className="mt-3 text-sm text-red-400 text-center">{error}</p>}
+            {loading && <p className="mt-3 text-sm text-white/50 text-center">인증 중...</p>}
             <button
-              onClick={() => handleSendOtp()}
+              onClick={handleSendOtp}
               disabled={resendCooldown > 0 || loading}
               className="mt-5 w-full py-2.5 rounded-lg text-sm text-white/60 border border-white/10 hover:border-white/30 transition disabled:opacity-40"
             >
-              {resendCooldown > 0
-                ? `재발송 (${resendCooldown}초 후 가능)`
-                : '인증번호 재발송'}
+              {resendCooldown > 0 ? `재발송 (${resendCooldown}초 후 가능)` : '인증번호 재발송'}
             </button>
             <button
-              onClick={() => {
-                setStep('phone')
-                setOtp(['', '', '', '', '', ''])
-                setError('')
-              }}
+              onClick={() => { setStep('email'); setOtp(['','','','','','']); setError('') }}
               className="mt-2 w-full py-2 text-sm text-white/40 hover:text-white/60 transition"
             >
-              전화번호 다시 입력
+              이메일 다시 입력
             </button>
           </>
         )}
