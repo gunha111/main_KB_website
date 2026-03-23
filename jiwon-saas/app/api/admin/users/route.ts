@@ -1,0 +1,41 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { isAdminAuthed } from '@/lib/admin-auth'
+
+function adminClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+// 유저 목록
+export async function GET() {
+  if (!isAdminAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const supabase = adminClient()
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, email, plan, kakao_consent, created_at')
+    .order('created_at', { ascending: false })
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
+
+// 플랜 변경
+export async function PATCH(req: Request) {
+  if (!isAdminAuthed()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { email, plan } = await req.json()
+  if (!email || !plan) return NextResponse.json({ error: 'email, plan 필요' }, { status: 400 })
+
+  const supabase = adminClient()
+  const { error } = await supabase
+    .from('profiles')
+    .update({ plan })
+    .eq('email', email)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}

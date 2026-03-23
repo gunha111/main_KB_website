@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED = ['/dashboard', '/onboarding', '/mypage']
 const AUTH_ONLY = ['/login', '/signup']
+const ADMIN_PROTECTED = ['/admin/dashboard']
 
 export default async function middleware(request: NextRequest) {
   // 환경변수 미설정 시 통과 (빌드/개발 초기)
@@ -42,6 +43,19 @@ export default async function middleware(request: NextRequest) {
 
   const isProtected = PROTECTED.some((p) => pathname.startsWith(p))
   const isAuthOnly = AUTH_ONLY.some((p) => pathname.startsWith(p))
+  const isAdminProtected = ADMIN_PROTECTED.some((p) => pathname.startsWith(p))
+
+  // 어드민 쿠키 없이 /admin/dashboard 접근 시 /admin으로
+  if (isAdminProtected) {
+    const adminPassword = process.env.ADMIN_PASSWORD ?? 'mpg-admin-2026'
+    const token = Buffer.from(adminPassword).toString('base64')
+    const adminCookie = request.cookies.get('admin_session')?.value
+    if (adminCookie !== token) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url)
+    }
+  }
 
   // 미로그인 → 보호 경로 접근 시 /login으로
   if (!user && isProtected) {
