@@ -23,10 +23,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko" className={`${notoSans.variable} ${notoSerif.variable}`}>
       <body
-        className="min-h-screen antialiased"
+        className="min-h-screen antialiased flex flex-col"
         style={{ backgroundColor: '#08112A', fontFamily: 'var(--font-sans)' }}
       >
-        {children}
+        <div className="flex-1">{children}</div>
+        <footer className="border-t border-white/5 py-8 px-6" style={{ backgroundColor: '#08112A' }}>
+          <div className="max-w-4xl mx-auto text-xs text-white/30 space-y-1">
+            <p className="font-medium text-white/50">지원알림</p>
+            <p>상호명: 유얼애니멀(youranimal) | 대표자: 백건하 | 사업자등록번호: 135-64-00782</p>
+            <p>주소: 서울특별시 강남구 봉은사로 307</p>
+            <p>이메일: kunha0303@gmail.com</p>
+            <p className="pt-2">© {new Date().getFullYear()} 지원알림. All rights reserved.</p>
+          </div>
+        </footer>
       </body>
     </html>
   )
