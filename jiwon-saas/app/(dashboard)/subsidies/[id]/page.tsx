@@ -64,9 +64,10 @@ export default async function SubsidyDetailPage({
       <hr className="border-white/10 mb-6" />
 
       {/* 공고 원문 */}
-      <pre className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed overflow-y-auto max-h-96 mb-8">
-        {subsidy.raw_content || '공고 내용이 없습니다.'}
-      </pre>
+      <div
+        className="text-sm text-white/70 leading-relaxed overflow-y-auto max-h-96 mb-8 prose prose-invert max-w-none"
+        dangerouslySetInnerHTML={{ __html: subsidy.raw_content || '공고 내용이 없습니다.' }}
+      />
 
       {/* 하단 고정 바 */}
       <div className="fixed bottom-0 left-0 right-0 px-4 py-4 border-t border-white/10" style={{ backgroundColor: '#08112A' }}>
