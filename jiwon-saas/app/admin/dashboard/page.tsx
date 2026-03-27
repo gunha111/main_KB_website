@@ -25,6 +25,7 @@ interface User {
   email: string
   plan: Plan
   kakao_consent: boolean
+  phone: string | null
   created_at: string
 }
 
@@ -208,6 +209,7 @@ export default function AdminDashboard() {
                 <tr className="border-b border-white/5">
                   <th className="text-left px-6 py-3 text-white/40 font-medium">이메일</th>
                   <th className="text-left px-6 py-3 text-white/40 font-medium">플랜</th>
+                  <th className="text-left px-6 py-3 text-white/40 font-medium">전화번호</th>
                   <th className="text-left px-6 py-3 text-white/40 font-medium">카카오</th>
                   <th className="text-left px-6 py-3 text-white/40 font-medium">가입일</th>
                 </tr>
@@ -227,6 +229,7 @@ export default function AdminDashboard() {
                         {PLAN_LABELS[u.plan] ?? u.plan}
                       </span>
                     </td>
+                    <td className="px-6 py-3 text-white/50">{u.phone ?? <span className="text-red-400/70 text-xs">미등록</span>}</td>
                     <td className="px-6 py-3 text-white/50">{u.kakao_consent ? '✓' : '-'}</td>
                     <td className="px-6 py-3 text-white/40">
                       {new Date(u.created_at).toLocaleDateString('ko-KR')}
@@ -235,7 +238,7 @@ export default function AdminDashboard() {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-white/30">유저 없음</td>
+                    <td colSpan={5} className="px-6 py-8 text-center text-white/30">유저 없음</td>
                   </tr>
                 )}
               </tbody>

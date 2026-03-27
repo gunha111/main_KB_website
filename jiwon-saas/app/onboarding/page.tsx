@@ -55,28 +55,33 @@ export default function OnboardingPage() {
   const [bizType, setBizType] = useState<BizType | null>(null)
   const [sido, setSido] = useState('')
   const [sigungu, setSigungu] = useState('')
+  const [bizSize, setBizSize] = useState<BizSize | null>(null)
+  const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
 
-  async function handleSelectSize(size: BizSize) {
-    if (!bizType || !sido || !sigungu) return
+  async function handleFinish() {
+    if (!bizType || !sido || !sigungu || !bizSize) return
     setSaving(true)
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
+
+    const cleanPhone = phone.replace(/[^0-9]/g, '')
 
     await supabase.from('profiles').upsert({
       id: user.id,
       biz_type: bizType,
       biz_region_sido: sido,
       biz_region_sigungu: sigungu,
-      biz_size: size,
+      biz_size: bizSize,
+      phone: cleanPhone || null,
     })
 
     router.push('/dashboard')
   }
 
   const sigunguList = sido ? (REGIONS[sido] ?? []) : []
-  const progress = `${step}/3`
+  const progress = `${step}/4`
 
   return (
     <div
@@ -97,7 +102,7 @@ export default function OnboardingPage() {
             <div
               className="h-1 rounded-full transition-all duration-500"
               style={{
-                width: `${(step / 3) * 100}%`,
+                width: `${(step / 4) * 100}%`,
                 backgroundColor: '#E8A020',
               }}
             />
@@ -192,9 +197,8 @@ export default function OnboardingPage() {
               {BIZ_SIZES.map((s) => (
                 <button
                   key={s.value}
-                  onClick={() => handleSelectSize(s.value)}
-                  disabled={saving}
-                  className="flex items-center gap-4 px-5 py-4 rounded-xl border border-white/10 hover:border-[#E8A020] transition text-left disabled:opacity-50"
+                  onClick={() => { setBizSize(s.value); setStep(4) }}
+                  className="flex items-center gap-4 px-5 py-4 rounded-xl border border-white/10 hover:border-[#E8A020] transition text-left"
                   style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
                 >
                   <span className="text-2xl">{s.emoji}</span>
@@ -205,15 +209,52 @@ export default function OnboardingPage() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setStep(2)}
+                className="flex-1 py-3 rounded-lg border border-white/10 text-white/60 hover:border-white/30 transition"
+              >
+                뒤로가기
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ── Step 4: 전화번호 ──────────────────────────────────── */}
+        {step === 4 && (
+          <>
+            <h2 className="text-xl font-bold text-white mb-2">
+              카카오 알림을 받을 전화번호를 입력해주세요
+            </h2>
+            <p className="text-sm text-white/40 mb-6">마감 D-14, D-7, D-3일 전에 알림톡을 보내드려요</p>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="010-0000-0000"
+              className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#E8A020] transition"
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setStep(3)}
                 disabled={saving}
                 className="flex-1 py-3 rounded-lg border border-white/10 text-white/60 hover:border-white/30 transition disabled:opacity-40"
               >
                 뒤로가기
               </button>
+              <button
+                onClick={handleFinish}
+                disabled={saving || !phone}
+                className="flex-1 py-3 rounded-lg font-semibold transition disabled:opacity-40"
+                style={{ backgroundColor: '#E8A020', color: '#08112A' }}
+              >
+                {saving ? '저장 중...' : '완료'}
+              </button>
             </div>
-            {saving && (
-              <p className="mt-4 text-center text-sm text-white/50">저장 중...</p>
-            )}
+            <button
+              onClick={handleFinish}
+              disabled={saving}
+              className="mt-3 w-full text-sm text-white/30 hover:text-white/50 transition disabled:opacity-40"
+            >
+              건너뛰기
+            </button>
           </>
         )}
       </div>

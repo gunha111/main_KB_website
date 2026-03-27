@@ -22,7 +22,7 @@ export async function GET() {
   // profiles 가져오기
   const { data: profiles, error: profileError } = await supabase
     .from('profiles')
-    .select('id, plan, kakao_consent, created_at')
+    .select('id, plan, kakao_consent, phone, created_at')
     .order('created_at', { ascending: false })
 
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })

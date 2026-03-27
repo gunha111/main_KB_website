@@ -4,6 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import { differenceInDays, parseISO } from 'date-fns'
 import type { Subsidy } from '@/lib/supabase/types'
 
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '')
+    .replace(/javascript:[^\s"'>]*/gi, '')
+}
+
 export default async function SubsidyDetailPage({
   params,
 }: {
@@ -66,7 +75,7 @@ export default async function SubsidyDetailPage({
       {/* 공고 원문 */}
       <div
         className="text-sm text-white/70 leading-relaxed overflow-y-auto max-h-96 mb-8 prose prose-invert max-w-none"
-        dangerouslySetInnerHTML={{ __html: subsidy.raw_content || '공고 내용이 없습니다.' }}
+        dangerouslySetInnerHTML={{ __html: sanitizeHtml(subsidy.raw_content || '공고 내용이 없습니다.') }}
       />
 
       {/* 하단 고정 바 */}
