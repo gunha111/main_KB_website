@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Noto_Sans_KR, Noto_Serif_KR } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css'
 
 const notoSans = Noto_Sans_KR({
@@ -22,6 +23,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${notoSans.variable} ${notoSerif.variable}`}>
+      <Script id="clarity" strategy="afterInteractive">{`
+        (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "w27xdppr1n");
+      `}</Script>
       <body
         className="min-h-screen antialiased flex flex-col"
         style={{ backgroundColor: '#08112A', fontFamily: 'var(--font-sans)' }}
