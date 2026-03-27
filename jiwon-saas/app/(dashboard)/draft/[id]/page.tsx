@@ -47,7 +47,7 @@ export default function DraftPage() {
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-3xl mx-auto text-white">
-      <Link href={`/dashboard/subsidies/${id}`} className="text-sm text-white/50 hover:text-white/80 transition mb-6 block">
+      <Link href={`/subsidies/${id}`} className="text-sm text-white/50 hover:text-white/80 transition mb-6 block">
         ← 공고로 돌아가기
       </Link>
       <h1 className="text-2xl font-bold mb-8">AI 신청서 초안</h1>

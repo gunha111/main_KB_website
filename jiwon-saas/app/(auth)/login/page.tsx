@@ -154,7 +154,7 @@ export default function LoginPage() {
           <>
             <p className="text-sm text-white/70 mb-1">
               <span className="text-white font-medium">{email}</span>로
-              전송된 6자리 인증번호를 입력해주세요
+              전송된 8자리 인증번호를 입력해주세요
             </p>
             <div className="flex gap-1.5 mt-4 justify-center">
               {otp.map((digit, i) => (

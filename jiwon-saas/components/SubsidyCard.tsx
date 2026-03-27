@@ -80,7 +80,7 @@ export default function SubsidyCard({ subsidy, blurred = false }: Props) {
           <DdayBadge endDate={subsidy.end_date} />
         </div>
         <Link
-          href={`/dashboard/subsidies/${subsidy.id}`}
+          href={`/subsidies/${subsidy.id}`}
           className="text-xs text-white/50 hover:text-[#E8A020] transition"
         >
           자세히 보기 →

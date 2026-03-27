@@ -83,7 +83,7 @@ export default async function SubsidyDetailPage({
             원문 공고 보기 →
           </a>
           <Link
-            href={canDraft ? `/dashboard/draft/${subsidy.id}` : '#'}
+            href={canDraft ? `/draft/${subsidy.id}` : '#'}
             className="flex-1 py-3 rounded-lg font-semibold text-center text-sm transition"
             style={{
               backgroundColor: canDraft ? '#E8A020' : 'rgba(255,255,255,0.1)',
