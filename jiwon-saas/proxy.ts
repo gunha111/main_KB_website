@@ -47,10 +47,15 @@ export default async function middleware(request: NextRequest) {
 
   // 어드민 쿠키 없이 /admin/dashboard 접근 시 /admin으로
   if (isAdminProtected) {
-    const adminPassword = process.env.ADMIN_PASSWORD ?? 'mpg-admin-2026'
-    const token = Buffer.from(adminPassword).toString('base64')
+    const adminPassword = process.env.ADMIN_PASSWORD
     const adminCookie = request.cookies.get('admin_session')?.value
-    if (adminCookie !== token) {
+    let valid = false
+    if (adminPassword && adminCookie) {
+      const { createHmac } = await import('crypto')
+      const expected = createHmac('sha256', adminPassword).update('admin_session').digest('hex')
+      valid = adminCookie === expected
+    }
+    if (!valid) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin'
       return NextResponse.redirect(url)
